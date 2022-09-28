@@ -162,6 +162,7 @@ private[spark] class HostLocalDirManager(
   }
 }
 
+// 在driver和executor上运行，本地或远程存取block到存储系统中，包括内存、磁盘、堆外内存
 /**
  * Manager running on every node (driver and executors) which provides interfaces for putting and
  * retrieving blocks both locally and remotely into various stores (memory, disk, and off-heap).
@@ -204,6 +205,7 @@ private[spark] class BlockManager(
   private val futureExecutionContext = ExecutionContext.fromExecutorService(
     ThreadUtils.newDaemonCachedThreadPool("block-manager-future", 128))
 
+  // blocks的实际存储空间
   // Actual storage of where blocks are kept
   private[spark] val memoryStore =
     new MemoryStore(conf, blockInfoManager, serializerManager, memoryManager, this)
@@ -225,6 +227,7 @@ private[spark] class BlockManager(
   // service, or just our own Executor's BlockManager.
   private[spark] var shuffleServerId: BlockManagerId = _
 
+  // 读取其他executor上block的client。可能是一个外部服务，或直接连接其他executor的BlockTransferService。
   // Client to read other executors' blocks. This is either an external service, or just the
   // standard BlockTransferService to directly connect to other Executors.
   private[spark] val blockStoreClient = externalBlockStoreClient.getOrElse(blockTransferService)
@@ -381,6 +384,7 @@ private[spark] class BlockManager(
         } else {
           null
         }
+        // 存储到内存/磁盘
         if (level.useMemory) {
           // Put it in memory first, even if it also has useDisk set to true;
           // We will drop it to disk later if the memory store can't hold it.
@@ -485,6 +489,7 @@ private[spark] class BlockManager(
 
   }
 
+  // 使用给定appId初始化BlockManager
   /**
    * Initializes the BlockManager with the given appId. This is not performed in the constructor as
    * the appId may not be known at BlockManager instantiation time (in particular for the driver,
@@ -495,7 +500,7 @@ private[spark] class BlockManager(
    * service if configured.
    */
   def initialize(appId: String): Unit = {
-    blockTransferService.init(this)
+    blockTransferService.init(this) // 初始化BlockTransferService
     externalBlockStoreClient.foreach { blockStoreClient =>
       blockStoreClient.init(appId)
     }
@@ -1060,7 +1065,7 @@ private[spark] class BlockManager(
           (if (res.isDefined) "successful." else "failed."))
         res
       }.orElse {
-        fetchRemoteManagedBuffer(blockId, blockSize, locationsAndStatus).map(bufferTransformer)
+        fetchRemoteManagedBuffer(blockId, blockSize, locationsAndStatus).map(bufferTransformer) // 获取远程block
       }
     }
   }
@@ -1210,6 +1215,7 @@ private[spark] class BlockManager(
     })
   }
 
+  // 从本地/远程BlockManager获取block
   /**
    * Get a block from the block manager (either local or remote).
    *
@@ -1218,12 +1224,12 @@ private[spark] class BlockManager(
    * automatically be freed once the result's `data` iterator is fully consumed.
    */
   def get[T: ClassTag](blockId: BlockId): Option[BlockResult] = {
-    val local = getLocalValues(blockId)
+    val local = getLocalValues(blockId) // 从本地获取
     if (local.isDefined) {
       logInfo(s"Found block $blockId locally")
       return local
     }
-    val remote = getRemoteValues[T](blockId)
+    val remote = getRemoteValues[T](blockId) // 从远程获取
     if (remote.isDefined) {
       logInfo(s"Found block $blockId remotely")
       return remote

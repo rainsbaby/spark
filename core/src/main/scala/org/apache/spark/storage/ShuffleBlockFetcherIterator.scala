@@ -42,6 +42,8 @@ import org.apache.spark.network.util.{NettyUtils, TransportConf}
 import org.apache.spark.shuffle.{FetchFailedException, ShuffleReadMetricsReporter}
 import org.apache.spark.util.{CompletionIterator, TaskCompletionListener, Utils}
 
+// 获取多个block的iterator。从本地BlockManager获取本地block。使用BlockTransferService获取远程block。
+// 创建iterator （BlockID, InputStream），因此调用者可以串行处理block。
 /**
  * An iterator that fetches multiple blocks. For local blocks, it fetches from the local block
  * manager. For remote blocks, it fetches them using the provided BlockTransferService.
@@ -587,7 +589,7 @@ final class ShuffleBlockFetcherIterator(
       localDirs: Array[String],
       blockManagerId: BlockManagerId): Boolean = {
     try {
-      val buf = blockManager.getHostLocalShuffleData(blockId, localDirs)
+      val buf = blockManager.getHostLocalShuffleData(blockId, localDirs) // 通过BlockManager获取本地block
       buf.retain()
       results.put(SuccessFetchResult(blockId, mapIndex, blockManagerId, buf.size(), buf,
         isNetworkReqDone = false))
@@ -706,7 +708,7 @@ final class ShuffleBlockFetcherIterator(
       (if (numDeferredRequest > 0 ) s", deferred $numDeferredRequest requests" else ""))
 
     // Get Local Blocks
-    fetchLocalBlocks(localBlocks)
+    fetchLocalBlocks(localBlocks) // 初始化时，获取本地block
     logDebug(s"Got local blocks in ${Utils.getUsedTimeNs(startTimeNs)}")
     // Get host local blocks if any
     fetchAllHostLocalBlocks(hostLocalBlocksByExecutor)

@@ -28,6 +28,9 @@ import org.apache.spark.unsafe.Platform
 import org.apache.spark.unsafe.array.ByteArrayMethods
 import org.apache.spark.unsafe.memory.MemoryAllocator
 
+// 管理执行与存储共享内存。
+// execution memory指用于shuffle、join、sort、aggregation的内存，storage memory指用于cache和集群中传递数据的内存。
+// 每个JVM中有一个MemoryManager。
 /**
  * An abstract memory manager that enforces how memory is shared between execution and storage.
  *

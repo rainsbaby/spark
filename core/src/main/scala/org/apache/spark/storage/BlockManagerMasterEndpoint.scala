@@ -39,6 +39,7 @@ import org.apache.spark.scheduler.cluster.{CoarseGrainedClusterMessages, CoarseG
 import org.apache.spark.storage.BlockManagerMessages._
 import org.apache.spark.util.{RpcUtils, ThreadUtils, Utils}
 
+// 位于master节点上，追踪所有存储节点上block manager的状态
 /**
  * BlockManagerMasterEndpoint is an [[IsolatedRpcEndpoint]] on the master node to track statuses
  * of all the storage endpoints' block managers.

@@ -53,6 +53,17 @@ import org.apache.spark.unsafe.memory.MemoryBlock;
 import org.apache.spark.util.Utils;
 
 /**
+ *  服务于sort-based的shuffle的sorter。
+ *
+ *  数据被追加到data page。当所有数据都被插入或达到当前线程都shuffle memory上限，内存中数据会被排序。
+ *  排序后的数据写入到一个单独的output文件中，文件格式与SortShuffleWriter输出的文件格式相同，
+ *  每个partition作为一个单独的序列化的、压缩的流进行写入。
+ *
+ *  与ExternalSorter不同的是，它不会对spill文件进行merge。
+ *  merge由UnsafeShuffleWriter执行，使用一个特殊的merge流程，避免流多余的序列化/反序列化。
+ */
+
+/**
  * An external sorter that is specialized for sort-based shuffle.
  * <p>
  * Incoming records are appended to data pages. When all records have been inserted (or when the
@@ -92,6 +103,7 @@ final class ShuffleExternalSorter extends MemoryConsumer implements ShuffleCheck
   /** The buffer size to use when writing the sorted records to an on-disk file */
   private final int diskWriteBufferSize;
 
+  // 存储正在排序的数据的内存页。这些page在spill时被释放，尽管我们可以在多次spill间重复利用这些page。
   /**
    * Memory pages that hold the records being sorted. The pages in this list are freed when
    * spilling, although in principle we could recycle these pages across spills (on the other hand,
@@ -146,6 +158,7 @@ final class ShuffleExternalSorter extends MemoryConsumer implements ShuffleCheck
     return getChecksumValues(partitionChecksums);
   }
 
+  // 排序内存中的数据，写入到磁盘文件中。
   /**
    * Sorts the in-memory records and writes the sorted records to an on-disk file.
    * This method does not free the sort data structures.
@@ -229,7 +242,7 @@ final class ShuffleExternalSorter extends MemoryConsumer implements ShuffleCheck
           final int toTransfer = Math.min(diskWriteBufferSize, dataRemaining);
           Platform.copyMemory(
             recordPage, recordReadPosition, writeBuffer, Platform.BYTE_ARRAY_OFFSET, toTransfer);
-          writer.write(writeBuffer, 0, toTransfer);
+          writer.write(writeBuffer, 0, toTransfer); // 将writeBuffer中内容写入磁盘文件
           recordReadPosition += toTransfer;
           dataRemaining -= toTransfer;
         }

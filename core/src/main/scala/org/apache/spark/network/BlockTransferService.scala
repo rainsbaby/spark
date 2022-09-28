@@ -28,6 +28,7 @@ import org.apache.spark.network.shuffle.{BlockFetchingListener, BlockStoreClient
 import org.apache.spark.storage.{BlockId, EncryptedManagedBuffer, StorageLevel}
 import org.apache.spark.util.ThreadUtils
 
+// 一次性获取多个block。包含client和server端。
 /**
  * The BlockTransferService that used for fetching a set of blocks at time. Each instance of
  * BlockTransferService contains both client and server inside.

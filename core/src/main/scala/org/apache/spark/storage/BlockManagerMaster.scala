@@ -63,6 +63,7 @@ class BlockManagerMaster(
     logInfo("Removal of executor " + execId + " requested")
   }
 
+  // 注册BlockManager到driver端
   /**
    * Register the BlockManager's id with the driver. The input BlockManagerId does not contain
    * topology information. This information is obtained from the master and we respond with an

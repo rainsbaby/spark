@@ -22,6 +22,12 @@ import java.util.Properties
 import org.apache.spark.util.CallSite
 
 /**
+ * DAGScheduler中执行的job。
+ * 有两种类型：result job计算ResultStage，或map-stage job计算ShuffleMapStage的输出。
+ * map-stage job用于自适应的query计划，在提交后面的stage之前查看map输出。
+ */
+
+/**
  * A running job in the DAGScheduler. Jobs can be of two types: a result job, which computes a
  * ResultStage to execute an action, or a map-stage job, which computes the map outputs for a
  * ShuffleMapStage before any downstream stages are submitted. The latter is used for adaptive

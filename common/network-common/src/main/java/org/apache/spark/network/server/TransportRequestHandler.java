@@ -36,6 +36,8 @@ import org.apache.spark.network.util.TransportFrameDecoder;
 
 import static org.apache.spark.network.util.NettyUtils.getRemoteAddress;
 
+// 处理client端的request，写回chunk数据。
+// 每个handler绑定到一个Netty channel上。
 /**
  * A handler that processes requests from clients and writes chunk data back. Each handler is
  * attached to a single Netty channel, and keeps track of which streams have been fetched via this

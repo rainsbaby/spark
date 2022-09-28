@@ -21,6 +21,8 @@ import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.util.CallSite
 
+// 对RDD对partition执行计算，得到action的计算结果。
+// 利用func表示要执行的函数，会应用到每个partition。有些stage可能只执行在部分partition上，如first/lookup这种action。
 /**
  * ResultStages apply a function on some partitions of an RDD to compute the result of an action.
  * The ResultStage object captures the function to execute, `func`, which will be applied to each

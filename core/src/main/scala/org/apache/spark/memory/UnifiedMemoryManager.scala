@@ -22,6 +22,9 @@ import org.apache.spark.internal.config
 import org.apache.spark.internal.config.Tests._
 import org.apache.spark.storage.BlockId
 
+// 加强了执行和存储内存之间的软边界，二者可以向彼此借用内存
+// 只要执行内存是空闲的，就可以借用为存储内存，直到重申为执行空间。当重申为执行空间时，缓存的block会从内存中清除，直到有足够的内存被释放来满足执行内存请求。
+// 执行可以借用存储内存。然而，存储不能清除已借用为执行空间的内存，因为实现起来比较复杂。因此如果执行任务消耗了大部分的存储内存，缓存block可能会失败。
 /**
  * A [[MemoryManager]] that enforces a soft boundary between execution and storage such that
  * either side can borrow memory from the other.
@@ -144,6 +147,7 @@ private[spark] class UnifiedMemoryManager(
       maxMemory - math.min(storagePool.memoryUsed, storageRegionSize)
     }
 
+    // ExecutionMemoryPoo申请更多内存
     executionPool.acquireMemory(
       numBytes, taskAttemptId, maybeGrowExecutionPool, () => computeMaxExecutionPoolSize)
   }

@@ -254,7 +254,7 @@ private[spark] class TaskSchedulerImpl(
         ts.isZombie = true
       }
       stageTaskSets(taskSet.stageAttemptId) = manager
-      schedulableBuilder.addTaskSetManager(manager, manager.taskSet.properties)
+      schedulableBuilder.addTaskSetManager(manager, manager.taskSet.properties) // todo by guixian 作用是？？？
 
       if (!isLocal && !hasReceivedTask) {
         starvationTimer.scheduleAtFixedRate(new TimerTask() {
@@ -352,6 +352,7 @@ private[spark] class TaskSchedulerImpl(
       s" ${manager.parent.name}")
   }
 
+  // 提供resource给某个TaskSetManager
   /**
    * Offers resources to a single [[TaskSetManager]] at a given max allowed [[TaskLocality]].
    *
@@ -492,6 +493,7 @@ private[spark] class TaskSchedulerImpl(
     }
   }
 
+  // 由cluster manager调用，增加resource给worker。根据task优先级返回task set。
   /**
    * Called by cluster manager to offer resources on workers. We respond by asking our active task
    * sets for tasks in order of priority. We fill each node with tasks in a round-robin manner so

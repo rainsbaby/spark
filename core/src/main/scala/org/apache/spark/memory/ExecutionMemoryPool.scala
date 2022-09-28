@@ -23,6 +23,7 @@ import scala.collection.mutable
 
 import org.apache.spark.internal.Logging
 
+// 执行内存池
 /**
  * Implements policies and bookkeeping for sharing an adjustable-sized pool of memory between tasks.
  *

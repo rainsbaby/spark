@@ -20,7 +20,7 @@ package org.apache.spark.rdd
 import scala.reflect.ClassTag
 
 import org.apache.spark.{Partition, TaskContext}
-
+// 对父RDD的每个partition执行计算
 /**
  * An RDD that applies the provided function to every partition of the parent RDD.
  *
@@ -38,7 +38,7 @@ import org.apache.spark.{Partition, TaskContext}
  */
 private[spark] class MapPartitionsRDD[U: ClassTag, T: ClassTag](
     var prev: RDD[T],
-    f: (TaskContext, Int, Iterator[T]) => Iterator[U],  // (TaskContext, partition index, iterator)
+    f: (TaskContext, Int, Iterator[T]) => Iterator[U],  // (TaskContext, partition index, iterator) 根据parentRDD计算当前RDD的计算逻辑
     preservesPartitioning: Boolean = false,
     isFromBarrier: Boolean = false,
     isOrderSensitive: Boolean = false)
@@ -47,9 +47,9 @@ private[spark] class MapPartitionsRDD[U: ClassTag, T: ClassTag](
   override val partitioner = if (preservesPartitioning) firstParent[T].partitioner else None
 
   override def getPartitions: Array[Partition] = firstParent[T].partitions
-
+  // f是什么？todo by guixian
   override def compute(split: Partition, context: TaskContext): Iterator[U] =
-    f(context, split.index, firstParent[T].iterator(split, context))
+    f(context, split.index, firstParent[T].iterator(split, context)) // 先计算parent.iterator，然后计算当前rdd
 
   override def clearDependencies(): Unit = {
     super.clearDependencies()

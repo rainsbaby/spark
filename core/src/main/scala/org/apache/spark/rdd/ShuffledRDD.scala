@@ -26,7 +26,7 @@ import org.apache.spark.serializer.Serializer
 private[spark] class ShuffledRDDPartition(val idx: Int) extends Partition {
   override val index: Int = idx
 }
-
+// shuffle的结果RDD
 /**
  * :: DeveloperApi ::
  * The resulting RDD from a shuffle (e.g. repartitioning of data).

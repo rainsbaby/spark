@@ -37,6 +37,7 @@ import org.apache.spark.network.shuffle.checksum.Cause;
 import org.apache.spark.network.shuffle.protocol.*;
 import org.apache.spark.network.util.TransportConf;
 
+// 从executor或外部服务读取shuffle files和RDD blocks
 /**
  * Provides an interface for reading both shuffle files and RDD blocks, either from an Executor
  * or external service.

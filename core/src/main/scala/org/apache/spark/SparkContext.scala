@@ -70,6 +70,7 @@ import org.apache.spark.ui.{ConsoleProgressBar, SparkUI}
 import org.apache.spark.util._
 import org.apache.spark.util.logging.DriverLogger
 
+// Spark功能主要入口。表示与Spark cluster的关联，可用于创建RDD、累加器、broadcast变量到cluster中。
 /**
  * Main entry point for Spark functionality. A SparkContext represents the connection to a Spark
  * cluster, and can be used to create RDDs, accumulators and broadcast variables on that cluster.
@@ -202,7 +203,7 @@ class SparkContext(config: SparkConf) extends Logging {
   private var _conf: SparkConf = _
   private var _eventLogDir: Option[URI] = None
   private var _eventLogCodec: Option[String] = None
-  private var _listenerBus: LiveListenerBus = _
+  private var _listenerBus: LiveListenerBus = _ // ??? TODO by guixian
   private var _env: SparkEnv = _
   private var _statusTracker: SparkStatusTracker = _
   private var _progressBar: Option[ConsoleProgressBar] = None
@@ -210,9 +211,9 @@ class SparkContext(config: SparkConf) extends Logging {
   private var _hadoopConfiguration: Configuration = _
   private var _executorMemory: Int = _
   private var _schedulerBackend: SchedulerBackend = _
-  private var _taskScheduler: TaskScheduler = _
-  private var _heartbeatReceiver: RpcEndpointRef = _
-  @volatile private var _dagScheduler: DAGScheduler = _
+  private var _taskScheduler: TaskScheduler = _ // ??? TODO by guixian
+  private var _heartbeatReceiver: RpcEndpointRef = _ // ??? TODO by guixian
+  @volatile private var _dagScheduler: DAGScheduler = _ // ??? TODO by guixian
   private var _applicationId: String = _
   private var _applicationAttemptId: Option[String] = None
   private var _eventLogger: Option[EventLoggingListener] = None
@@ -555,8 +556,10 @@ class SparkContext(config: SparkConf) extends Logging {
     // Initialize any plugins before the task scheduler is initialized.
     _plugins = PluginContainer(this, _resources.asJava)
 
+    // 创建并启动TaskScheduler 和 DAGScheduler
     // Create and start the scheduler
-    val (sched, ts) = SparkContext.createTaskScheduler(this, master, deployMode)
+    val (
+      sched, ts) = SparkContext.createTaskScheduler(this, master, deployMode)
     _schedulerBackend = sched
     _taskScheduler = ts
     _dagScheduler = new DAGScheduler(this)
@@ -576,6 +579,7 @@ class SparkContext(config: SparkConf) extends Logging {
       conf.get(EXECUTOR_HEARTBEAT_INTERVAL))
     _heartbeater.start()
 
+    // 启动TaskScheduler
     // start TaskScheduler after taskScheduler sets DAGScheduler reference in DAGScheduler's
     // constructor
     _taskScheduler.start()
@@ -2930,7 +2934,7 @@ object SparkContext extends Logging {
       case SPARK_REGEX(sparkUrl) =>
         val scheduler = new TaskSchedulerImpl(sc)
         val masterUrls = sparkUrl.split(",").map("spark://" + _)
-        val backend = new StandaloneSchedulerBackend(scheduler, sc, masterUrls)
+        val backend = new StandaloneSchedulerBackend(scheduler, sc, masterUrls) // Standalone模式
         scheduler.initialize(backend)
         (backend, scheduler)
 

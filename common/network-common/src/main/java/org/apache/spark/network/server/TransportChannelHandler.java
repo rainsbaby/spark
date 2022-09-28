@@ -33,6 +33,7 @@ import org.apache.spark.network.protocol.RequestMessage;
 import org.apache.spark.network.protocol.ResponseMessage;
 import static org.apache.spark.network.util.NettyUtils.getRemoteAddress;
 
+// 负责分发request给TransportRequestHandler，分发response给TransportResponseHandler。
 /**
  * The single Transport-level Channel handler which is used for delegating requests to the
  * {@link TransportRequestHandler} and responses to the {@link TransportResponseHandler}.

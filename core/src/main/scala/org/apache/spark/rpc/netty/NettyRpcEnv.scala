@@ -491,6 +491,7 @@ private[rpc] class NettyRpcEnvFactory extends RpcEnvFactory with Logging {
     val nettyEnv =
       new NettyRpcEnv(sparkConf, javaSerializerInstance, config.advertiseAddress,
         config.securityManager, config.numUsableCores)
+    // 非client模式时，启动RPC Server。why？？？ todo by guixian
     if (!config.clientMode) {
       val startNettyRpcEnv: Int => (NettyRpcEnv, Int) = { actualPort =>
         nettyEnv.startServer(config.bindAddress, actualPort)

@@ -23,6 +23,8 @@ import org.apache.spark.{MapOutputTrackerMaster, ShuffleDependency}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.util.CallSite
 
+// DAG中的中间stage，为shuffle生成数据。在shuffle操作前发生，可能包含多个串行的operation。
+// 执行时，保存输出文件，之后被reduce task获取使用。
 /**
  * ShuffleMapStages are intermediate stages in the execution DAG that produce data for a shuffle.
  * They occur right before each shuffle operation, and might contain multiple pipelined operations

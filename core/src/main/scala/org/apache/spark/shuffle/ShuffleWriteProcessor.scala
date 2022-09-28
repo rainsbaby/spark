@@ -22,6 +22,8 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.scheduler.MapStatus
 
+// 负责shuffle write流程。
+// driver创建ShuffleWriteProcessor并放入ShuffleDependency，executor在每个ShuffleMapTask中使用。
 /**
  * The interface for customizing shuffle write process. The driver create a ShuffleWriteProcessor
  * and put it into [[ShuffleDependency]], and executors use it in each ShuffleMapTask.

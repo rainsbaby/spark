@@ -172,7 +172,7 @@ private[spark] class CoarseGrainedExecutorBackend(
         case NonFatal(e) =>
           exitExecutor(1, "Unable to create executor due to " + e.getMessage, e)
       }
-
+    // 启动task
     case LaunchTask(data) =>
       if (executor == null) {
         exitExecutor(1, "Received LaunchTask command but executor was null")
@@ -465,7 +465,7 @@ private[spark] object CoarseGrainedExecutorBackend extends Logging {
 
       driverConf.set(EXECUTOR_ID, arguments.executorId)
       val env = SparkEnv.createExecutorEnv(driverConf, arguments.executorId, arguments.bindAddress,
-        arguments.hostname, arguments.cores, cfg.ioEncryptionKey, isLocal = false)
+        arguments.hostname, arguments.cores, cfg.ioEncryptionKey, isLocal = false) // 创建Executor env，包括BlockManager等
       // Set the application attemptId in the BlockStoreClient if available.
       val appAttemptId = env.conf.get(APP_ATTEMPT_ID)
       appAttemptId.foreach(attemptId =>

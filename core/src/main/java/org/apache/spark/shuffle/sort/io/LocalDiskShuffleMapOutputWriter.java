@@ -38,6 +38,7 @@ import org.apache.spark.shuffle.IndexShuffleBlockResolver;
 import org.apache.spark.shuffle.api.metadata.MapOutputCommitMessage;
 import org.apache.spark.util.Utils;
 
+// 实现ShuffleMapOutputWriter，复制shuffle数据到本地磁盘，同时有index文件，与spark历史上经典shuffle存储机制相同。
 /**
  * Implementation of {@link ShuffleMapOutputWriter} that replicates the functionality of shuffle
  * persisting shuffle data to local disk alongside index files, identical to Spark's historic
@@ -116,7 +117,7 @@ public class LocalDiskShuffleMapOutputWriter implements ShuffleMapOutputWriter {
     log.debug("Writing shuffle index file for mapId {} with length {}", mapId,
         partitionLengths.length);
     blockResolver
-      .writeMetadataFileAndCommit(shuffleId, mapId, partitionLengths, checksums, resolvedTmp);
+      .writeMetadataFileAndCommit(shuffleId, mapId, partitionLengths, checksums, resolvedTmp); // 写metadata文件
     return MapOutputCommitMessage.of(partitionLengths);
   }
 

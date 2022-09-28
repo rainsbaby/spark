@@ -38,9 +38,12 @@ public final class JavaWordCount {
     }
 
     SparkSession spark = SparkSession
-      .builder()
-      .appName("JavaWordCount")
-      .getOrCreate();
+            .builder()
+            .appName("JavaWordCount")
+            .master("local[2]")
+            .config("spark.driver.bindAddress", "127.0.0.1")
+//            .master("spark://10.249.74.115:7077")
+            .getOrCreate(); // 创建SparkContext、SparkSession
 
     JavaRDD<String> lines = spark.read().textFile(args[0]).javaRDD();
 
@@ -49,6 +52,7 @@ public final class JavaWordCount {
     JavaPairRDD<String, Integer> ones = words.mapToPair(s -> new Tuple2<>(s, 1));
 
     JavaPairRDD<String, Integer> counts = ones.reduceByKey((i1, i2) -> i1 + i2);
+    counts.cache();
 
     List<Tuple2<String, Integer>> output = counts.collect();
     for (Tuple2<?,?> tuple : output) {

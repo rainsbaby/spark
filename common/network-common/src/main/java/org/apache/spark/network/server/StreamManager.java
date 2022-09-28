@@ -22,6 +22,7 @@ import io.netty.channel.Channel;
 import org.apache.spark.network.buffer.ManagedBuffer;
 import org.apache.spark.network.client.TransportClient;
 
+// 从stream中获取chunk，在TransportRequestHandler中使用，用于处理fetchChunk请求。
 /**
  * The StreamManager is used to fetch individual chunks from a stream. This is used in
  * {@link TransportRequestHandler} in order to respond to fetchChunk() requests. Creation of the

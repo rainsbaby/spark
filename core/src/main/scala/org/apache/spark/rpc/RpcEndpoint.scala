@@ -28,6 +28,8 @@ private[spark] trait RpcEnvFactory {
   def create(config: RpcEnvConfig): RpcEnv
 }
 
+// RPC节点，定义每个消息触发的动作。
+// 保证onStart, receive and onStop按顺序执行。
 /**
  * An end point for the RPC that defines what functions to trigger given a message.
  *

@@ -21,6 +21,7 @@ import java.nio.ByteBuffer
 
 import org.apache.spark.TaskState.TaskState
 
+// Executor端用来发送更新消息到cluster scheduler的接口
 /**
  * A pluggable interface used by the Executor to send updates to the cluster scheduler.
  */

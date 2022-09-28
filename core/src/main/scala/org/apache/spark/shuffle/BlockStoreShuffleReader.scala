@@ -25,6 +25,7 @@ import org.apache.spark.storage.{BlockId, BlockManager, BlockManagerId, ShuffleB
 import org.apache.spark.util.CompletionIterator
 import org.apache.spark.util.collection.ExternalSorter
 
+// 向其他节点的block store发起请求，获取shuffle task的结果block
 /**
  * Fetches and reads the blocks from a shuffle by requesting them from other nodes' block stores.
  */

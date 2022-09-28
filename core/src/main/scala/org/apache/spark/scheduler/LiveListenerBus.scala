@@ -34,6 +34,7 @@ import org.apache.spark.internal.config._
 import org.apache.spark.metrics.MetricsSystem
 import org.apache.spark.metrics.source.Source
 
+// 异步传递event给SparkListener
 /**
  * Asynchronously passes SparkListenerEvents to registered SparkListeners.
  *

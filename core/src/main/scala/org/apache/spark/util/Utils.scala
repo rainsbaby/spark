@@ -533,7 +533,7 @@ private[spark] object Utils extends Logging {
       val cachedFile = new File(localDir, cachedFileName)
       try {
         if (!cachedFile.exists()) {
-          doFetchFile(url, localDir, cachedFileName, conf, hadoopConf)
+          doFetchFile(url, localDir, cachedFileName, conf, hadoopConf) // 远程获取文件
         }
       } finally {
         lock.release()

@@ -36,6 +36,12 @@ import org.apache.spark.util.{AccumulatorV2, Clock, LongAccumulator, SystemClock
 import org.apache.spark.util.collection.MedianHeap
 
 /**
+ * 调度TaskSchedulerImpl中一个单独的TaskSet。
+ * 跟踪每个task，失败时重试task，以及利用delay scheduling处理位置相关的调度？？？
+ * 主要接口包括：resourceOffer，handleSuccessfulTask/handleFailedTask。
+ */
+
+/**
  * Schedules the tasks within a single TaskSet in the TaskSchedulerImpl. This class keeps track of
  * each task, retries tasks if they fail (up to a limited number of times), and
  * handles locality-aware scheduling for this TaskSet via delay scheduling. The main interfaces
@@ -409,6 +415,8 @@ private[spark] class TaskSetManager(
   }
 
   /**
+   * 从scheduler接收到一个executor时进行处理，寻找一个task
+   *
    * Respond to an offer of a single executor from the scheduler by finding a task
    *
    * NOTE: this function is either called with a maxLocality which

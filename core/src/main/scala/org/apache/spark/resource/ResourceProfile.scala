@@ -32,6 +32,12 @@ import org.apache.spark.internal.config.Python.PYSPARK_EXECUTOR_MEMORY
 import org.apache.spark.util.Utils
 
 /**
+ * Resource profile与RDD关联。ResourceProfile允许用户为RDD指定executor和task需求，在stage中应用。
+ * stage之间可以改变资源需求。
+ * 创建之后不能修改。使用ResourceProfileBuilder进行创建。
+ */
+
+/**
  * Resource profile to associate with an RDD. A ResourceProfile allows the user to
  * specify executor and task requirements for an RDD that will get applied during a
  * stage. This allows the user to change the resource requirements between stages.

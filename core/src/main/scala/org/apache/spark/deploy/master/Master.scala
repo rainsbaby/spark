@@ -42,6 +42,7 @@ import org.apache.spark.rpc._
 import org.apache.spark.serializer.{JavaSerializer, Serializer}
 import org.apache.spark.util.{SparkUncaughtExceptionHandler, ThreadUtils, Utils}
 
+// Standalone模式
 private[deploy] class Master(
     override val rpcEnv: RpcEnv,
     address: RpcAddress,
@@ -142,6 +143,7 @@ private[deploy] class Master(
     logInfo("Starting Spark master at " + masterUrl)
     logInfo(s"Running Spark version ${org.apache.spark.SPARK_VERSION}")
     webUi = new MasterWebUI(this, webUiPort)
+    // 启动jetty server
     webUi.bind()
     masterWebUiUrl = webUi.webUrl
     if (reverseProxy) {
@@ -174,6 +176,7 @@ private[deploy] class Master(
     masterMetricsSystem.getServletHandlers.foreach(webUi.attachHandler)
     applicationMetricsSystem.getServletHandlers.foreach(webUi.attachHandler)
 
+    // 持久化和leader选举
     val serializer = new JavaSerializer(conf)
     val (persistenceEngine_, leaderElectionAgent_) = recoveryMode match {
       case "ZOOKEEPER" =>
@@ -226,6 +229,7 @@ private[deploy] class Master(
   }
 
   override def receive: PartialFunction[Any, Unit] = {
+    // 成为leader
     case ElectedLeader =>
       val (storedApps, storedDrivers, storedWorkers) = persistenceEngine.readPersistedData(rpcEnv)
       state = if (storedApps.isEmpty && storedDrivers.isEmpty && storedWorkers.isEmpty) {
@@ -270,6 +274,7 @@ private[deploy] class Master(
         }
       )
 
+    // 注册worker
     case RegisterWorker(
       id, workerHost, workerPort, workerRef, cores, memory, workerWebUiUrl,
       masterAddress, resources) =>
@@ -284,7 +289,7 @@ private[deploy] class Master(
         val worker = new WorkerInfo(id, workerHost, workerPort, cores, memory,
           workerRef, workerWebUiUrl, workerResources)
         if (registerWorker(worker)) {
-          persistenceEngine.addWorker(worker)
+          persistenceEngine.addWorker(worker) // 进行持久化，用于故障恢复
           workerRef.send(RegisteredWorker(self, masterWebUiUrl, masterAddress, false))
           schedule()
         } else {
@@ -296,6 +301,7 @@ private[deploy] class Master(
         }
       }
 
+    // 注册application, driver
     case RegisterApplication(description, driver) =>
       // TODO Prevent repeated registrations from some driver
       if (state == RecoveryState.STANDBY) {
@@ -303,10 +309,10 @@ private[deploy] class Master(
       } else {
         logInfo("Registering app " + description.name)
         val app = createApplication(description, driver)
-        registerApplication(app)
+        registerApplication(app)    // 注册application
         logInfo("Registered app " + description.name + " with ID " + app.id)
         persistenceEngine.addApplication(app)
-        driver.send(RegisteredApplication(app.id, self))
+        driver.send(RegisteredApplication(app.id, self)) // 返回application已注册的消息
         schedule()
       }
 
@@ -412,6 +418,7 @@ private[deploy] class Master(
   }
 
   override def receiveAndReply(context: RpcCallContext): PartialFunction[Any, Unit] = {
+    // 提交Driver
     case RequestSubmitDriver(description) =>
       if (state != RecoveryState.ALIVE) {
         val msg = s"${Utils.BACKUP_STANDALONE_MASTER_PREFIX}: $state. " +
@@ -727,6 +734,7 @@ private[deploy] class Master(
     assignedCores
   }
 
+  // 在worker上启动executor
   /**
    * Schedule and launch executors on workers
    */
@@ -813,6 +821,8 @@ private[deploy] class Master(
       desc.resourceReqsPerExecutor)
   }
 
+  // 调度可用的资源运行application。
+  // 每次有新的app或有资源变化时，调用此方法。
   /**
    * Schedule the currently available resources among waiting apps. This method will be called
    * every time a new app joins or resource availability changes.
@@ -839,7 +849,7 @@ private[deploy] class Master(
         if (canLaunchDriver(worker, driver.desc)) {
           val allocated = worker.acquireResources(driver.desc.resourceReqs)
           driver.withResources(allocated)
-          launchDriver(worker, driver)
+          launchDriver(worker, driver) // 在worker上启动driver
           waitingDrivers -= driver
           launched = true
         }
@@ -849,16 +859,16 @@ private[deploy] class Master(
         logWarning(s"Driver ${driver.id} requires more resource than any of Workers could have.")
       }
     }
-    startExecutorsOnWorkers()
+    startExecutorsOnWorkers() // 在worker上启动executor
   }
 
   private def launchExecutor(worker: WorkerInfo, exec: ExecutorDesc): Unit = {
     logInfo("Launching executor " + exec.fullId + " on worker " + worker.id)
     worker.addExecutor(exec)
     worker.endpoint.send(LaunchExecutor(masterUrl, exec.application.id, exec.id,
-      exec.application.desc, exec.cores, exec.memory, exec.resources))
+      exec.application.desc, exec.cores, exec.memory, exec.resources)) // 发送LaunchExecutor到worker端
     exec.application.driver.send(
-      ExecutorAdded(exec.id, worker.id, worker.hostPort, exec.cores, exec.memory))
+      ExecutorAdded(exec.id, worker.id, worker.hostPort, exec.cores, exec.memory)) // 发送ExecutorAdded到driver端
   }
 
   private def registerWorker(worker: WorkerInfo): Boolean = {

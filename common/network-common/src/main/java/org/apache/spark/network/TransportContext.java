@@ -47,6 +47,7 @@ import org.apache.spark.network.util.NettyUtils;
 import org.apache.spark.network.util.TransportConf;
 import org.apache.spark.network.util.TransportFrameDecoder;
 
+// 包含创建 TransportServer, TransportClientFactory和使用TransportChannelHandler建立Netty Channel Pipeline的context
 /**
  * Contains the context to create a {@link TransportServer}, {@link TransportClientFactory}, and to
  * setup Netty Channel pipelines with a

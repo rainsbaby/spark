@@ -223,6 +223,7 @@ private[deploy] class Worker(
     }
   }
 
+  // 第一步：启动
   override def onStart(): Unit = {
     assert(!registered)
     logInfo("Starting Spark worker %s:%d with %d cores, %s RAM".format(
@@ -236,7 +237,7 @@ private[deploy] class Worker(
     webUi.bind()
 
     workerWebUiUrl = s"${webUi.scheme}$publicAddress:${webUi.boundPort}"
-    registerWithMaster()
+    registerWithMaster() // 注册到master上
 
     metricsSystem.registerSource(workerSource)
     metricsSystem.start()
@@ -410,6 +411,7 @@ private[deploy] class Worker(
     registrationRetryTimer = None
   }
 
+  // 注册到master上
   private def registerWithMaster(): Unit = {
     // onDisconnected may be triggered multiple times, so don't attempt registration
     // if there are outstanding registration attempts scheduled.
@@ -563,6 +565,7 @@ private[deploy] class Worker(
       logInfo(s"Master with url $masterUrl requested this worker to reconnect.")
       registerWithMaster()
 
+    // 启动Executor
     case LaunchExecutor(masterUrl, appId, execId, appDesc, cores_, memory_, resources_) =>
       if (masterUrl != activeMasterUrl) {
         logWarning("Invalid Master (" + masterUrl + ") attempted to launch executor.")
@@ -654,6 +657,7 @@ private[deploy] class Worker(
         }
       }
 
+    // 启动Driver
     case LaunchDriver(driverId, driverDesc, resources_) =>
       logInfo(s"Asked to launch driver $driverId")
       val driver = new DriverRunner(
@@ -952,7 +956,7 @@ private[deploy] object Worker extends Logging {
     val rpcEnv = RpcEnv.create(systemName, host, port, conf, securityMgr)
     val masterAddresses = masterUrls.map(RpcAddress.fromSparkURL)
     rpcEnv.setupEndpoint(ENDPOINT_NAME, new Worker(rpcEnv, webUiPort, cores, memory,
-      masterAddresses, ENDPOINT_NAME, workDir, conf, securityMgr, resourceFileOpt))
+      masterAddresses, ENDPOINT_NAME, workDir, conf, securityMgr, resourceFileOpt)) // 启动Worker Endpoint
     rpcEnv
   }
 

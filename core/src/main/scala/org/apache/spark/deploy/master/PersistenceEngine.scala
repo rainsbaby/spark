@@ -23,6 +23,12 @@ import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.rpc.RpcEnv
 
 /**
+ * Master的状态持久化，用于master的故障恢复。
+ * 1. addApplication和addWorker方法要在完成app/worker注册之前调用
+ * 2. removeApplication和removeWorker 可以在任何时候调用。
+ */
+
+/**
  * Allows Master to persist any state that is necessary in order to recover from a failure.
  * The following semantics are required:
  *   - addApplication and addWorker are called before completing registration of a new app/worker.

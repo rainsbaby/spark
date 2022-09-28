@@ -47,7 +47,7 @@ private[spark] trait WritablePartitionedPairCollection[K, V] {
    */
   def destructiveSortedWritablePartitionedIterator(keyComparator: Option[Comparator[K]])
     : WritablePartitionedIterator[K, V] = {
-    val it = partitionedDestructiveSortedIterator(keyComparator)
+    val it = partitionedDestructiveSortedIterator(keyComparator) // 排序
     new WritablePartitionedIterator[K, V](it)
   }
 }

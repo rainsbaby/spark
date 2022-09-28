@@ -36,6 +36,7 @@ import org.apache.spark.rpc.RpcEndpointRef
 import org.apache.spark.util.{ShutdownHookManager, Utils}
 import org.apache.spark.util.logging.FileAppender
 
+// 管理executor的执行
 /**
  * Manages the execution of one executor process.
  * This is currently only used in standalone mode.
@@ -142,6 +143,7 @@ private[deploy] class ExecutorRunner(
     case other => other
   }
 
+  // 下载并执行executor
   /**
    * Download and run the executor described in our ApplicationDescription
    */
@@ -156,7 +158,7 @@ private[deploy] class ExecutorRunner(
       }
       val subsCommand = appDesc.command.copy(arguments = arguments, javaOpts = subsOpts)
       val builder = CommandUtils.buildProcessBuilder(subsCommand, new SecurityManager(conf),
-        memory, sparkHome.getAbsolutePath, substituteVariables)
+        memory, sparkHome.getAbsolutePath, substituteVariables) // 启动CoarseGrainedExecutorBackend
       val command = builder.command()
       val redactedCommand = Utils.redactCommandLineArgs(conf, command.asScala.toSeq)
         .mkString("\"", "\" \"", "\"")

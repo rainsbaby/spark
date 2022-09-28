@@ -24,6 +24,7 @@ import scala.util.control.NonFatal
 
 import org.apache.spark.internal.Logging
 
+// 事件循环处理器，接收来自调用者的event，并在event线程中处理所有event。由一个单独的event线程处理所有event。
 /**
  * An event loop to receive events from the caller and process all events in the event thread. It
  * will start an exclusive event thread to process all events.

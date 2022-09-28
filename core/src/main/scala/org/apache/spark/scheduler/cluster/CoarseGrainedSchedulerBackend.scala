@@ -41,6 +41,11 @@ import org.apache.spark.scheduler.cluster.CoarseGrainedSchedulerBackend.ENDPOINT
 import org.apache.spark.util.{RpcUtils, SerializableBuffer, ThreadUtils, Utils}
 
 /**
+ * 等待粗粒度的executor连接的scheduler backend。
+ * 在spark job持续时间内，持有每个executor，而不是在task执行完成后放弃executor然后为每个task启动一个新的executor。
+ */
+
+/**
  * A scheduler backend that waits for coarse-grained executors to connect.
  * This backend holds onto each executor for the duration of the Spark job rather than relinquishing
  * executors whenever a task is done and asking the scheduler to launch a new executor for
@@ -120,6 +125,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
       ThreadUtils.newDaemonSingleThreadScheduledExecutor("cleanup-decommission-execs")
     }
 
+  // Driver端
   class DriverEndpoint extends IsolatedRpcEndpoint with Logging {
 
     override val rpcEnv: RpcEnv = CoarseGrainedSchedulerBackend.this.rpcEnv
@@ -145,8 +151,9 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
     }
 
     override def receive: PartialFunction[Any, Unit] = {
+      // Task状态更新
       case StatusUpdate(executorId, taskId, state, data, resources) =>
-        scheduler.statusUpdate(taskId, state, data.value)
+        scheduler.statusUpdate(taskId, state, data.value) // task状态更新
         if (TaskState.isFinished(state)) {
           executorDataMap.get(executorId) match {
             case Some(executorInfo) =>
@@ -223,7 +230,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
     }
 
     override def receiveAndReply(context: RpcCallContext): PartialFunction[Any, Unit] = {
-
+      // 注册Executor
       case RegisterExecutor(executorId, executorRef, hostname, cores, logUrls,
           attributes, resources, resourceProfileId) =>
         if (executorDataMap.contains(executorId)) {
@@ -366,6 +373,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
       }
     }
 
+    // 启动task
     // Launch tasks returned by a set of resource offers
     private def launchTasks(tasks: Seq[Seq[TaskDescription]]): Unit = {
       for (task <- tasks.flatten) {
@@ -399,7 +407,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
           logDebug(s"Launching task ${task.taskId} on executor id: ${task.executorId} hostname: " +
             s"${executorData.executorHost}.")
 
-          executorData.executorEndpoint.send(LaunchTask(new SerializableBuffer(serializedTask)))
+          executorData.executorEndpoint.send(LaunchTask(new SerializableBuffer(serializedTask))) // 发送LaunchTask给ExecutorEndpoint
         }
       }
     }
@@ -474,6 +482,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
     }
   }
 
+  // driver节点
   val driverEndpoint = rpcEnv.setupEndpoint(ENDPOINT_NAME, createDriverEndpoint())
 
   protected def minRegisteredRatio: Double = _minRegisteredRatio

@@ -36,6 +36,7 @@ trait LeaderElectable {
   def revokedLeadership(): Unit
 }
 
+// 只有一个Master节点时，该节点总是leader
 /** Single-node implementation of LeaderElectionAgent -- we're initially and always the leader. */
 private[spark] class MonarchyLeaderAgent(val masterInstance: LeaderElectable)
   extends LeaderElectionAgent {

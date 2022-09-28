@@ -28,6 +28,7 @@ import org.apache.spark.network.client.StreamCallbackWithID;
 import org.apache.spark.network.client.TransportClient;
 import org.apache.spark.network.protocol.MergedBlockMetaRequest;
 
+// Client端sendRPC发送的RPC消息的处理者
 /**
  * Handler for sendRPC() messages sent by {@link org.apache.spark.network.client.TransportClient}s.
  */

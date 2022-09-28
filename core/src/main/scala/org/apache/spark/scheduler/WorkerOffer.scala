@@ -21,6 +21,7 @@ import scala.collection.mutable.Buffer
 
 import org.apache.spark.resource.ResourceProfile
 
+// 表示executor中的可用资源
 /**
  * Represents free resources available on an executor.
  */

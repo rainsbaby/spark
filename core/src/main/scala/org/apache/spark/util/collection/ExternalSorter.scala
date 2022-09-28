@@ -36,6 +36,26 @@ import org.apache.spark.storage.{BlockId, DiskBlockObjectWriter, ShuffleBlockId}
 import org.apache.spark.util.{CompletionIterator, Utils => TryUtils}
 
 /**
+ * 排序并可能merge key-value对数据。使用Partitioner将key分区到不同partition，之后在partition内对key进行排序。
+ * 生成一个单独的文件，包括多个partition，每个partition位于文件的一个区间内，用于获取shuffle数据。
+ * 与此类的交互方式：
+ * 1. 初始化一个ExternalSorter
+ * 2. 调用insertAll()方法插入数据
+ * 3. 调用iterator()获取排序的/aggregate的数据。或调用writePartitionedFile()生成一个文件，包含排序/aggregate的数据，用于sort shuffle
+ *
+ * 内部机制：
+ * 重复地加入内存数据buffer，如果希望基于key进行组合就使用PartitionedAppendOnlyMap，否则使用PartitionedPairBuffer。
+ * buffer内部，根据partitionId，也可能与key一起，进行数据的排序。为了避免多次调用partitioner，在每条数据中记录partitionId。
+ *
+ * 当buffer达到内存上限，将它spill到文件中。
+ * 文件首先按partitionId进行排序，其次如果希望做aggregate则还可能按key或key的hash值排序。
+ * 对于每个文件，会在内存中归路每个partition中有多少数据，因此不需要记录每条数据的partitionId。
+ *
+ * 当用户请求iterator或文件输出，spill的文件以及内存中数据会被merge，使用上面同样的sort顺序。
+ * 如果需要按key进行aggregate，就使用一个总排序，或读取具有相同hash值的key并比较以合并数值。
+ */
+
+/**
  * Sorts and potentially merges a number of key-value pairs of type (K, V) to produce key-combiner
  * pairs of type (K, C). Uses a Partitioner to first group the keys into partitions, and then
  * optionally sorts keys within each partition using a custom Comparator. Can output a single
@@ -174,7 +194,7 @@ private[spark] class ExternalSorter[K, V, C](
     serializerBatchSizes: Array[Long],
     elementsPerPartition: Array[Long])
 
-  private val spills = new ArrayBuffer[SpilledFile]
+  private val spills = new ArrayBuffer[SpilledFile] // 存储spill的文件
 
   /**
    * Number of files this sorter has spilled so far.
@@ -205,12 +225,13 @@ private[spark] class ExternalSorter[K, V, C](
       while (records.hasNext) {
         addElementsRead()
         val kv = records.next()
-        buffer.insert(getPartition(kv._1), kv._1, kv._2.asInstanceOf[C])
+        buffer.insert(getPartition(kv._1), kv._1, kv._2.asInstanceOf[C]) // insert数据，每条数据包含（partition，key，value）
         maybeSpillCollection(usingMap = false)
       }
     }
   }
 
+  // 需要时将内存中的数据spill到磁盘
   /**
    * Spill the current in-memory collection to disk if needed.
    *
@@ -235,6 +256,7 @@ private[spark] class ExternalSorter[K, V, C](
     }
   }
 
+  // spill 内存中数据到排序的文件中，之后进行merge。
   /**
    * Spill our in-memory collection to a sorted file that we can merge later.
    * We add this file into `spilledFiles` to find it later.
@@ -287,6 +309,7 @@ private[spark] class ExternalSorter[K, V, C](
     // How many elements we have in each partition
     val elementsPerPartition = new Array[Long](numPartitions)
 
+    // flush磁盘writer内容到磁盘，并更新相关变量
     // Flush the disk writer's contents to disk, and update relevant variables.
     // The writer is committed at the end of this process.
     def flush(): Unit = {
@@ -333,6 +356,7 @@ private[spark] class ExternalSorter[K, V, C](
     SpilledFile(file, blockId, batchSizes.toArray, elementsPerPartition)
   }
 
+  // merge排序的文件和内存中的数据
   /**
    * Merge a sequence of sorted files, giving an iterator over partitions and then over elements
    * inside each partition. This can be used to either write out a new file or return data to
@@ -662,6 +686,7 @@ private[spark] class ExternalSorter[K, V, C](
           collection.partitionedDestructiveSortedIterator(Some(keyComparator))))
       }
     } else {
+      // merge spill到磁盘的和保存在内存中的数据
       // Merge spilled and in-memory data
       merge(spills.toSeq, destructiveIterator(
         collection.partitionedDestructiveSortedIterator(comparator)))
@@ -750,10 +775,10 @@ private[spark] class ExternalSorter[K, V, C](
       mapId: Long,
       mapOutputWriter: ShuffleMapOutputWriter): Unit = {
     var nextPartitionId = 0
-    if (spills.isEmpty) {
+    if (spills.isEmpty) { // 数据都在内存中
       // Case where we only have in-memory data
       val collection = if (aggregator.isDefined) map else buffer
-      val it = collection.destructiveSortedWritablePartitionedIterator(comparator)
+      val it = collection.destructiveSortedWritablePartitionedIterator(comparator) // 获取排序后的数据的iterator
       while (it.hasNext) {
         val partitionId = it.nextPartition()
         var partitionWriter: ShufflePartitionWriter = null
@@ -779,6 +804,7 @@ private[spark] class ExternalSorter[K, V, C](
         nextPartitionId = partitionId + 1
       }
     } else {
+      // 执行merge-sort；获取按partition的iterator，然后写每个partition
       // We must perform merge-sort; get an iterator by partition and write everything directly.
       for ((id, elements) <- this.partitionedIterator) {
         val blockId = ShuffleBlockId(shuffleId, mapId, id)

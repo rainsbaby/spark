@@ -138,6 +138,8 @@ private[netty] class Outbox(nettyEnv: NettyRpcEnv, val address: RpcAddress) {
     }
   }
 
+  // 从消息队列中取出消息进行发送。
+  // 同一时刻只有一个线程进行发送。
   /**
    * Drain the message queue. If there is other draining thread, just exit. If the connection has
    * not been established, launch a task in the `nettyEnv.clientConnectionExecutor` to setup the

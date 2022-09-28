@@ -44,6 +44,7 @@ import org.apache.spark.network.server.MessageHandler;
 import static org.apache.spark.network.util.NettyUtils.getRemoteAddress;
 import org.apache.spark.network.util.TransportFrameDecoder;
 
+// 在Client端负责处理server的response
 /**
  * Handler that processes server responses, in response to requests issued from a
  * [[TransportClient]]. It works by tracking the list of outstanding requests (and their callbacks).

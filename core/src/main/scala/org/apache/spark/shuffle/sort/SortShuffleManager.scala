@@ -113,6 +113,7 @@ private[spark] class SortShuffleManager(conf: SparkConf) extends ShuffleManager 
     }
   }
 
+  // 为区间内的reduce partition获取reader，用于从map output读取数据。
   /**
    * Get a reader for a range of reduce partitions (startPartition to endPartition-1, inclusive) to
    * read from a range of map outputs(startMapIndex to endMapIndex-1, inclusive).

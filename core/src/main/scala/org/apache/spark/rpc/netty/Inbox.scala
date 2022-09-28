@@ -74,6 +74,7 @@ private[netty] class Inbox(val endpointName: String, val endpoint: RpcEndpoint)
   @GuardedBy("this")
   private var numActiveThreads = 0
 
+  // 第一个消息为OnStart
   // OnStart should be the first message to process
   inbox.synchronized {
     messages.add(OnStart)

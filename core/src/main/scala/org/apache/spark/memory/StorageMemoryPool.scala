@@ -23,6 +23,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.storage.BlockId
 import org.apache.spark.storage.memory.MemoryStore
 
+// 用于存储的内存
 /**
  * Performs bookkeeping for managing an adjustable-size pool of memory that is used for storage
  * (caching).

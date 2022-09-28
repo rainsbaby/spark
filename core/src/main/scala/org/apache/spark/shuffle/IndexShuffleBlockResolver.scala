@@ -37,6 +37,7 @@ import org.apache.spark.shuffle.IndexShuffleBlockResolver.NOOP_REDUCE_ID
 import org.apache.spark.storage._
 import org.apache.spark.util.Utils
 
+// 创建并维护shuffle block的block与文件位置之间的映射
 /**
  * Create and maintain the shuffle blocks' mapping between logic block and physical file location.
  * Data of shuffle blocks from the same map task are stored in a single consolidated data file.
@@ -309,6 +310,8 @@ private[spark] class IndexShuffleBlockResolver(
   }
 
 
+  // 原子性地提交数据和metadata文件，使用已有数据或用新的数据代替旧的数据。
+  // 有两种类型的metadata文件：1.index文件，包含每个block的offset，以及最终的offset。2.checksum文件，包含每个block的checksum。
   /**
    * Commit the data and metadata files as an atomic operation, use the existing ones, or
    * replace them with new ones. Note that the metadata parameters (`lengths`, `checksums`)
@@ -376,7 +379,7 @@ private[spark] class IndexShuffleBlockResolver(
           // so override any existing index and data files with the ones we wrote.
 
           val offsets = lengths.scanLeft(0L)(_ + _)
-          writeMetadataFile(offsets, indexTmp, indexFile, true)
+          writeMetadataFile(offsets, indexTmp, indexFile, true) // 写入index数据
 
           if (dataFile.exists()) {
             dataFile.delete()
@@ -388,7 +391,7 @@ private[spark] class IndexShuffleBlockResolver(
           // write the checksum file
           checksumTmpOpt.zip(checksumFileOpt).foreach { case (checksumTmp, checksumFile) =>
             try {
-              writeMetadataFile(checksums, checksumTmp, checksumFile, false)
+              writeMetadataFile(checksums, checksumTmp, checksumFile, false) // 写入checksum数据
             } catch {
               case e: Exception =>
                 // It's not worthwhile to fail here after index file and data file are

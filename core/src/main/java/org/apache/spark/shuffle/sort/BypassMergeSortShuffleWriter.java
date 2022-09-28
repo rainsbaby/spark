@@ -57,6 +57,12 @@ import org.apache.spark.storage.*;
 import org.apache.spark.util.Utils;
 
 /**
+ * 实现了基于排序的shuffle的hash式shuffle后退路径。
+ * 输出数据到不同的文件，每个partition一个文件，然后将这些文件拼接为一个单独的文件，每个reducer使用一个区间。
+ * 数据不存在内存中。数据可被IndexShuffleBlockResolver消费。
+ */
+
+/**
  * This class implements sort-based shuffle's hash-style shuffle fallback path. This write path
  * writes incoming records to separate files, one file per reduce partition, then concatenates these
  * per-partition files to form a single output file, regions of which are served to reducers.

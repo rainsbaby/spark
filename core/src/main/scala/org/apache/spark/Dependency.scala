@@ -38,6 +38,10 @@ abstract class Dependency[T] extends Serializable {
 
 
 /**
+ * 子RDD的每个partition只依赖父RDD的少数partition。窄依赖允许串行化执行。
+ */
+
+/**
  * :: DeveloperApi ::
  * Base class for dependencies where each partition of the child RDD depends on a small number
  * of partitions of the parent RDD. Narrow dependencies allow for pipelined execution.
@@ -54,6 +58,10 @@ abstract class NarrowDependency[T](_rdd: RDD[T]) extends Dependency[T] {
   override def rdd: RDD[T] = _rdd
 }
 
+
+/**
+ * 表示对shuffle stage输出的依赖。宽依赖
+ */
 
 /**
  * :: DeveloperApi ::
@@ -96,7 +104,7 @@ class ShuffleDependency[K: ClassTag, V: ClassTag, C: ClassTag](
   val shuffleId: Int = _rdd.context.newShuffleId()
 
   val shuffleHandle: ShuffleHandle = _rdd.context.env.shuffleManager.registerShuffle(
-    shuffleId, this)
+    shuffleId, this) // todo by guixian ？？？
 
   private[this] val numPartitions = rdd.partitions.length
 

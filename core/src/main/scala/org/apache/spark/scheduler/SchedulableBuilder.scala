@@ -31,6 +31,7 @@ import org.apache.spark.internal.config.SCHEDULER_ALLOCATION_FILE
 import org.apache.spark.scheduler.SchedulingMode.SchedulingMode
 import org.apache.spark.util.Utils
 
+// 构建Schedulable 树的接口
 /**
  * An interface to build Schedulable tree
  * buildPools: build the tree nodes(pools)

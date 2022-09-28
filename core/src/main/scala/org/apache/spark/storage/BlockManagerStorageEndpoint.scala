@@ -25,6 +25,7 @@ import org.apache.spark.rpc.{IsolatedRpcEndpoint, RpcCallContext, RpcEnv}
 import org.apache.spark.storage.BlockManagerMessages._
 import org.apache.spark.util.{ThreadUtils, Utils}
 
+// 从master获取命令并执行
 /**
  * An RpcEndpoint to take commands from the master to execute options. For example,
  * this is used to remove blocks from the storage endpoint's BlockManager.

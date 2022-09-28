@@ -32,6 +32,7 @@ object BroadcastTest {
       .builder()
       .appName("Broadcast Test")
       .config("spark.broadcast.blockSize", blockSize)
+      .master("local[2]")
       .getOrCreate()
 
     val sc = spark.sparkContext
@@ -45,8 +46,8 @@ object BroadcastTest {
       println(s"Iteration $i")
       println("===========")
       val startTime = System.nanoTime
-      val barr1 = sc.broadcast(arr1)
-      val observedSizes = sc.parallelize(1 to 10, slices).map(_ => barr1.value.length)
+      val barr1 = sc.broadcast(arr1) // 创建broadcast变量
+      val observedSizes = sc.parallelize(1 to 10, slices).map(_ => barr1.value.length) // 通过value方法获取broadcast变量
       // Collect the small RDD so we can print the observed sizes locally.
       observedSizes.collect().foreach(i => println(i))
       println("Iteration %d took %.0f milliseconds".format(i, (System.nanoTime - startTime) / 1E6))

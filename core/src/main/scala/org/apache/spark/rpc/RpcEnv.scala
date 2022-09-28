@@ -59,6 +59,8 @@ private[spark] object RpcEnv {
 }
 
 
+// RpcEndpoint 注册在RpcEnv中后接收消息。
+// RpcEnv处理来自于RpcEndpointRef或远程node的消息，并转发给相应的RpcEndpoint。
 /**
  * An RPC environment. [[RpcEndpoint]]s need to register itself with a name to [[RpcEnv]] to
  * receives messages. Then [[RpcEnv]] will process messages sent from [[RpcEndpointRef]] or remote

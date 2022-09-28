@@ -45,6 +45,22 @@ import org.apache.spark.network.protocol.*;
 import static org.apache.spark.network.util.NettyUtils.getRemoteAddress;
 
 /**
+ * 用于获取预先协商好的流的连续块的client端。目的是有效传输大量的数据，这些数据被分割成大小不等的几百KB到几MB的块。
+ * 请注意，虽然这个客户端从流中获取块（即数据平面），但流的实际设置是在传输层的范围之外完成的。
+ * 提供方便的 "sendRPC "是为了使客户端和服务器之间的控制面通信能够执行这种设置。
+ *
+ * 例如，一个典型的工作流程可能是：
+ * client.sendRPC(new OpenFile("/foo")) --&gt; returns StreamId = 100
+ * client.fetchChunk(streamId = 100, chunkIndex = 0, callback)
+ * client.fetchChunk(streamId = 100, chunkIndex = 1, callback)
+ * ...
+ * client.sendRPC(new CloseStream(100))
+ *
+ *
+* TransportClient向server发送request，TransportResponseHandler负责处理server端的response。
+ */
+
+/**
  * Client for fetching consecutive chunks of a pre-negotiated stream. This API is intended to allow
  * efficient transfer of a large amount of data, broken up into chunks with size ranging from
  * hundreds of KB to a few MB.

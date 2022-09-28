@@ -19,6 +19,8 @@ package org.apache.spark.network.client;
 
 import io.netty.channel.Channel;
 
+// 在一个TransportClient返回给用户前，执行引导程序。用于初始的信息交换，如token认证等。
+// 由于连接和TransportClient可以复用，因此TransportClientBootstrap可负责一些昂贵的引导操作。
 /**
  * A bootstrap which is executed on a TransportClient before it is returned to the user.
  * This enables an initial exchange of information (e.g., SASL authentication tokens) on a once-per-

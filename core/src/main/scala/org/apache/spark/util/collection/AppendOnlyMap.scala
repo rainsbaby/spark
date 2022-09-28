@@ -23,6 +23,7 @@ import com.google.common.hash.Hashing
 
 import org.apache.spark.annotation.DeveloperApi
 
+// 为append-only使用的hash表，key不会被删除，只会被修改
 /**
  * :: DeveloperApi ::
  * A simple open hash table optimized for the append-only use case, where keys
@@ -53,6 +54,7 @@ class AppendOnlyMap[K, V](initialCapacity: Int = 64)
   private var curSize = 0
   private var growThreshold = (LOAD_FACTOR * capacity).toInt
 
+  // 在一个array中存储key和value，顺序为key0, value0, key1, value1, key2, value2
   // Holds keys and values in the same array for memory locality; specifically, the order of
   // elements is key0, value0, key1, value1, key2, value2, etc.
   private var data = new Array[AnyRef](2 * capacity)
@@ -270,7 +272,7 @@ class AppendOnlyMap[K, V](initialCapacity: Int = 64)
       keyIndex += 1
     }
     assert(curSize == newIndex + (if (haveNullValue) 1 else 0))
-
+    // 排序
     new Sorter(new KVArraySortDataFormat[K, AnyRef]).sort(data, 0, newIndex, keyComparator)
 
     new Iterator[(K, V)] {

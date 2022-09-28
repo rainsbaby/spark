@@ -22,6 +22,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.internal.config._
 import org.apache.spark.memory.{MemoryConsumer, MemoryMode, TaskMemoryManager}
 
+// 当内存占用超过限制时，讲内存中数据spill到磁盘上
 /**
  * Spills contents of an in-memory collection to disk when the memory threshold
  * has been exceeded.
@@ -71,6 +72,7 @@ private[spark] abstract class Spillable[C](taskMemoryManager: TaskMemoryManager)
   // Number of spills
   private[this] var _spillCount = 0
 
+  // 需要的情况下，将内存中的collection spill到磁盘。在spill之前，尝试申请更多内存。
   /**
    * Spills the current in-memory collection to disk if needed. Attempts to acquire more
    * memory before spilling.
@@ -84,7 +86,7 @@ private[spark] abstract class Spillable[C](taskMemoryManager: TaskMemoryManager)
     if (elementsRead % 32 == 0 && currentMemory >= myMemoryThreshold) {
       // Claim up to double our current memory from the shuffle memory pool
       val amountToRequest = 2 * currentMemory - myMemoryThreshold
-      val granted = acquireMemory(amountToRequest)
+      val granted = acquireMemory(amountToRequest) // 尝试申请更多内存
       myMemoryThreshold += granted
       // If we were granted too little memory to grow further (either tryToAcquire returned 0,
       // or we already had more memory than myMemoryThreshold), spill the current collection
@@ -95,7 +97,7 @@ private[spark] abstract class Spillable[C](taskMemoryManager: TaskMemoryManager)
     if (shouldSpill) {
       _spillCount += 1
       logSpillage(currentMemory)
-      spill(collection)
+      spill(collection) // 执行spill
       _elementsRead = 0
       _memoryBytesSpilled += currentMemory
       releaseMemory()

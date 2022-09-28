@@ -92,11 +92,12 @@ private[spark] class TorrentBroadcast[T: ClassTag](obj: T, id: Long)
   private val broadcastId = BroadcastBlockId(id)
 
   /** Total number of blocks this broadcast variable contains. */
-  private val numBlocks: Int = writeBlocks(obj)
+  private val numBlocks: Int = writeBlocks(obj) // 分块并写入到block manager
 
   /** The checksum for all the blocks. */
   private var checksums: Array[Int] = _
 
+  // 获取value
   override protected def getValue() = synchronized {
     val memoized: T = if (_value == null) null.asInstanceOf[T] else _value.get
     if (memoized != null) {
@@ -120,7 +121,7 @@ private[spark] class TorrentBroadcast[T: ClassTag](obj: T, id: Long)
     }
     adler.getValue.toInt
   }
-
+  // 将object分为多个block，并放入到block manager
   /**
    * Divide the object into multiple blocks and put those blocks in the block manager.
    *
@@ -129,6 +130,7 @@ private[spark] class TorrentBroadcast[T: ClassTag](obj: T, id: Long)
    */
   private def writeBlocks(value: T): Int = {
     import StorageLevel._
+    // 存储broadcast变量的副本到driver，因此在driver端执行的task不需要创建broadcast变量的副本
     // Store a copy of the broadcast variable in the driver so that tasks run on the driver
     // do not create a duplicate copy of the broadcast variable's value.
     val blockManager = SparkEnv.get.blockManager
@@ -147,6 +149,7 @@ private[spark] class TorrentBroadcast[T: ClassTag](obj: T, id: Long)
         }
         val pieceId = BroadcastBlockId(id, "piece" + i)
         val bytes = new ChunkedByteBuffer(block.duplicate())
+        // 分块存储到blockmanager
         if (!blockManager.putBytes(pieceId, bytes, MEMORY_AND_DISK_SER, tellMaster = true)) {
           throw new SparkException(s"Failed to store $pieceId of $broadcastId " +
             s"in local BlockManager")
@@ -252,7 +255,7 @@ private[spark] class TorrentBroadcast[T: ClassTag](obj: T, id: Long)
             logInfo(s"Started reading broadcast variable $id with $numBlocks pieces " +
               s"(estimated total size $estimatedTotalSize)")
             val startTimeNs = System.nanoTime()
-            val blocks = readBlocks()
+            val blocks = readBlocks() // 远程获取block
             logInfo(s"Reading broadcast variable $id took ${Utils.getUsedTimeNs(startTimeNs)}")
 
             try {

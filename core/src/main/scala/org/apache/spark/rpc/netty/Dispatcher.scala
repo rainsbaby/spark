@@ -29,6 +29,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.network.client.RpcResponseCallback
 import org.apache.spark.rpc._
 
+// 消息分发，负责将RPC消息分发给合适的endpoint
 /**
  * A message dispatcher, responsible for routing RPC messages to the appropriate endpoint(s).
  *

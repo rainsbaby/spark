@@ -21,6 +21,12 @@ import org.apache.spark.resource.ResourceProfile
 import org.apache.spark.storage.BlockManagerId
 
 /**
+ * 调度系统的后端接口，允许在TaskSchedulerImpl中插入不同的实例。
+ * Mesos-like 模型，application获得resource后，启动task。
+ * todo by guixian ？？？
+ */
+
+/**
  * A backend interface for scheduling systems that allows plugging in different ones under
  * TaskSchedulerImpl. We assume a Mesos-like model where the application gets resource offers as
  * machines become available and can launch tasks on them.
@@ -30,6 +36,7 @@ private[spark] trait SchedulerBackend {
 
   def start(): Unit
   def stop(): Unit
+  // 更新当前offer，调度task
   /**
    * Update the current offers and schedule tasks
    */

@@ -51,6 +51,8 @@ import org.apache.spark.util.collection.{ExternalAppendOnlyMap, OpenHashMap,
 import org.apache.spark.util.random.{BernoulliCellSampler, BernoulliSampler, PoissonSampler,
   SamplingUtils}
 
+// 弹性分布式数据集。代表不可变的、分区的数据集，可以并行处理。
+// 内部主要包括属性：partitions，对每个split执行对计算函数，对其他RDDs的依赖，key-value RDD的partitioner，期望计算每个split的位置。
 /**
  * A Resilient Distributed Dataset (RDD), the basic abstraction in Spark. Represents an immutable,
  * partitioned collection of elements that can be operated on in parallel. This class contains the
@@ -324,7 +326,7 @@ abstract class RDD[T: ClassTag](
       getPreferredLocations(split)
     }
   }
-
+  // 如果已cache则从cache中读取，否则进行计算。
   /**
    * Internal method to this RDD; will read from cache if applicable, or otherwise compute it.
    * This should ''not'' be called by users directly, but is available for implementers of custom
@@ -381,6 +383,7 @@ abstract class RDD[T: ClassTag](
     val blockId = RDDBlockId(id, partition.index)
     var readCachedBlock = true
     // This method is called on executors, so we need call SparkEnv.get instead of sc.env.
+    // 通过BlockManager获取block
     SparkEnv.get.blockManager.getOrElseUpdate(blockId, storageLevel, elementClassTag, () => {
       readCachedBlock = false
       computeOrReadCheckpoint(partition, context)
@@ -1027,7 +1030,7 @@ abstract class RDD[T: ClassTag](
    * all the data is loaded into the driver's memory.
    */
   def collect(): Array[T] = withScope {
-    val results = sc.runJob(this, (iter: Iterator[T]) => iter.toArray)
+    val results = sc.runJob(this, (iter: Iterator[T]) => iter.toArray) // collect时，提交job执行
     Array.concat(results: _*)
   }
 

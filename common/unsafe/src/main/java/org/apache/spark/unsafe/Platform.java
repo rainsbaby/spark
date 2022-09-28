@@ -211,7 +211,7 @@ public final class Platform {
       if (CLEANER_CREATE_METHOD == null) {
         // Can't set a Cleaner (see comments on field), so need to allocate via normal Java APIs
         try {
-          return ByteBuffer.allocateDirect(size);
+          return ByteBuffer.allocateDirect(size); // 直接通过Java API创建buffer
         } catch (OutOfMemoryError oome) {
           // checkstyle.off: RegexpSinglelineJava
           throw new OutOfMemoryError("Failed to allocate direct buffer (" + oome.getMessage() +

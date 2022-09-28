@@ -31,6 +31,13 @@ import org.apache.spark.resource.ResourceInformation
 import org.apache.spark.util._
 
 /**
+ * 一个执行单元。
+ * 包括ShuffleMapTask和ResultTask。
+ * 一个job包含一或多个stage。job的最后stage包含多个ResultTask，前面的stage包含ShuffleMapTask。
+ * ResultTask执行后发送输出到driver上。ShuffleMapTask执行后，分割输出到多个bucket（依据task的partitioner分割）。
+ */
+
+/**
  * A unit of execution. We have two kinds of Task's in Spark:
  *
  *  - [[org.apache.spark.scheduler.ShuffleMapTask]]

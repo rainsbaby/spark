@@ -111,7 +111,7 @@ private class ClientEndpoint(
           command,
           driverResourceReqs)
         asyncSendToMasterAndForwardReply[SubmitDriverResponse](
-          RequestSubmitDriver(driverDescription))
+          RequestSubmitDriver(driverDescription)) // 发送提交Driver请求到Master端
 
       case "kill" =>
         val driverId = driverArgs.driverId

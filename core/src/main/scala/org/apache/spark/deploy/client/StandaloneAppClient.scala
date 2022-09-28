@@ -34,6 +34,7 @@ import org.apache.spark.rpc._
 import org.apache.spark.scheduler.ExecutorDecommissionInfo
 import org.apache.spark.util.{RpcUtils, ThreadUtils}
 
+// application与standalone cluster manager交互的接口
 /**
  * Interface allowing applications to speak with a Spark standalone cluster manager.
  *
@@ -84,7 +85,7 @@ private[spark] class StandaloneAppClient(
 
     override def onStart(): Unit = {
       try {
-        registerWithMaster(1)
+        registerWithMaster(1) // 注册到master
       } catch {
         case e: Exception =>
           logWarning("Failed to connect to master", e)
@@ -154,6 +155,7 @@ private[spark] class StandaloneAppClient(
     }
 
     override def receive: PartialFunction[Any, Unit] = {
+      // Master 端注册application完成后，返回RegisteredApplication消息
       case RegisteredApplication(appId_, masterRef) =>
         // FIXME How to handle the following cases?
         // 1. A master receives multiple registrations and sends back multiple

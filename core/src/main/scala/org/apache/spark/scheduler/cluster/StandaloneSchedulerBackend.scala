@@ -121,7 +121,7 @@ private[spark] class StandaloneSchedulerBackend(
       webUrl, sc.eventLogDir, sc.eventLogCodec, coresPerExecutor, initialExecutorLimit,
       resourceReqsPerExecutor = executorResourceReqs)
     client = new StandaloneAppClient(sc.env.rpcEnv, masters, appDesc, this, conf)
-    client.start()
+    client.start() // 启动client
     launcherBackend.setState(SparkAppHandle.State.SUBMITTED)
     waitForRegistration()
     launcherBackend.setState(SparkAppHandle.State.RUNNING)

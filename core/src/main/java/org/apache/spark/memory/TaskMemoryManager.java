@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.spark.unsafe.memory.MemoryBlock;
 import org.apache.spark.util.Utils;
 
+// 管理一个task中分配的内存
 /**
  * Manages the memory allocated by an individual task.
  * <p>
@@ -90,17 +91,18 @@ public class TaskMemoryManager {
    * When using an on-heap allocator, the entries in this map will point to pages' base objects.
    * Entries are added to this map as new data pages are allocated.
    */
-  private final MemoryBlock[] pageTable = new MemoryBlock[PAGE_TABLE_SIZE];
+  private final MemoryBlock[] pageTable = new MemoryBlock[PAGE_TABLE_SIZE]; // todo by guixian ???
 
   /**
    * Bitmap for tracking free pages.
    */
   private final BitSet allocatedPages = new BitSet(PAGE_TABLE_SIZE);
 
-  private final MemoryManager memoryManager;
+  private final MemoryManager memoryManager; // 内存管理
 
   private final long taskAttemptId;
 
+  // 记录是堆内内存还是堆外内存
   /**
    * Tracks whether we're on-heap or off-heap. For off-heap, we short-circuit most of these methods
    * without doing any masking or lookups. Since this branching should be well-predicted by the JIT,
@@ -112,7 +114,7 @@ public class TaskMemoryManager {
    * Tracks spillable memory consumers.
    */
   @GuardedBy("this")
-  private final HashSet<MemoryConsumer> consumers;
+  private final HashSet<MemoryConsumer> consumers; // todo by guixian 为什么有多个consumer？
 
   /**
    * The amount of memory that is acquired but not used.
@@ -129,6 +131,7 @@ public class TaskMemoryManager {
     this.consumers = new HashSet<>();
   }
 
+  // 请求执行内存
   /**
    * Acquire N bytes of memory for a consumer. If there is no enough memory, it will call
    * spill() of consumers to release more memory.
@@ -144,8 +147,9 @@ public class TaskMemoryManager {
     // off-heap memory. This is subject to change, though, so it may be risky to make this
     // optimization now in case we forget to undo it late when making changes.
     synchronized (this) {
-      long got = memoryManager.acquireExecutionMemory(required, taskAttemptId, mode);
+      long got = memoryManager.acquireExecutionMemory(required, taskAttemptId, mode); // 向MemoryManager请求执行内存
 
+      // 没有获取到足够到内存时，尝试让其他consumer释放内存
       // Try to release memory from other consumers first, then we can reduce the frequency of
       // spilling, avoid to have too many spilled files.
       if (got < required) {
@@ -153,7 +157,7 @@ public class TaskMemoryManager {
         // Sort the consumers according their memory usage. So we avoid spilling the same consumer
         // which is just spilled in last few times and re-spilling on it will produce many small
         // spill files.
-        TreeMap<Long, List<MemoryConsumer>> sortedConsumers = new TreeMap<>();
+        TreeMap<Long, List<MemoryConsumer>> sortedConsumers = new TreeMap<>(); // 使用TreeMap（红黑树）进行排序
         for (MemoryConsumer c: consumers) {
           if (c != consumer && c.getUsed() > 0 && c.getMode() == mode) {
             long key = c.getUsed();
@@ -202,6 +206,7 @@ public class TaskMemoryManager {
         }
       }
 
+      // 尝试spill 自身的内存
       // Attempt to free up memory by self-spilling.
       //
       // When our spill handler releases memory, `ExecutionMemoryPool#releaseMemory()` will

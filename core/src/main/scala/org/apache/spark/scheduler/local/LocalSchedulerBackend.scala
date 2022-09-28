@@ -88,13 +88,14 @@ private[spark] class LocalEndpoint(
     // local mode doesn't support extra resources like GPUs right now
     val offers = IndexedSeq(new WorkerOffer(localExecutorId, localExecutorHostname, freeCores,
       Some(rpcEnv.address.hostPort)))
-    for (task <- scheduler.resourceOffers(offers, true).flatten) {
+    for (task <- scheduler.resourceOffers(offers, true).flatten) { // 获取要执行的task
       freeCores -= scheduler.CPUS_PER_TASK
-      executor.launchTask(executorBackend, task)
+      executor.launchTask(executorBackend, task) // 执行task
     }
   }
 }
 
+// 执行local版本的spark时使用，此时executor、backend、master都在同一个jvm中运行
 /**
  * Used when running a local version of Spark where the executor, backend, and master all run in
  * the same JVM. It sits behind a [[TaskSchedulerImpl]] and handles launching tasks on a single

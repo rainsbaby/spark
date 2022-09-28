@@ -53,6 +53,7 @@ import org.apache.spark.sql.types.{DataType, StructType}
 import org.apache.spark.sql.util.ExecutionListenerManager
 import org.apache.spark.util.{CallSite, Utils}
 
+// 利用Dataset和DataFrame API对spark进行编程的入口。
 /**
  * The entry point to programming Spark with the Dataset and DataFrame API.
  *

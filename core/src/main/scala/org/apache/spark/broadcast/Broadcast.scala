@@ -26,6 +26,17 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.util.Utils
 
 /**
+ * Broadcast变量。
+ *
+ * Broadcast变量在每个机器上保存一个副本，而不是为每个task传输一个副本。
+ * 它可以用于为每个node提供一个大的dataset的副本。spark还尝试使用高效的broadcast算法来分发broadcast变量，降低传输成本。
+ *
+ * 可以通过SparkContext.broadcast()创建broadcast变量，然后调用Broadcast.value()方法获取它的值。
+ *
+ * Broadcast变量被broadcast后，它的值不能被修改，以此保证各个node有相同的值。
+ */
+
+/**
  * A broadcast variable. Broadcast variables allow the programmer to keep a read-only variable
  * cached on each machine rather than shipping a copy of it with tasks. They can be used, for
  * example, to give every node a copy of a large input dataset in an efficient manner. Spark also

@@ -36,6 +36,7 @@ private sealed abstract class MessageLoop(dispatcher: Dispatcher) extends Loggin
   // List of inboxes with pending messages, to be processed by the message loop.
   private val active = new LinkedBlockingQueue[Inbox]()
 
+  // 循环处理消息的线程
   // Message loop task; should be run in all threads of the message loop's pool.
   protected val receiveLoopRunnable = new Runnable() {
     override def run(): Unit = receiveLoop()

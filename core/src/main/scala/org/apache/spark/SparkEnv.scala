@@ -47,6 +47,8 @@ import org.apache.spark.shuffle.ShuffleManager
 import org.apache.spark.storage._
 import org.apache.spark.util.{RpcUtils, Utils}
 
+// 保存master或worker的运行时环境数据，如serializer、RpcEnv、block manager等。
+// 目前SparkEnv是一个全局变量，因此所有线程访问同一个SparkEnv。
 /**
  * :: DeveloperApi ::
  * Holds all the runtime environment objects for a running Spark instance (either master or worker),
@@ -158,6 +160,7 @@ object SparkEnv extends Logging {
     env
   }
 
+  // DriverEnv包括什么？？？ todo by guixian
   /**
    * Create a SparkEnv for the driver.
    */
@@ -192,6 +195,7 @@ object SparkEnv extends Logging {
     )
   }
 
+  // 创建Executor env
   /**
    * Create a SparkEnv for an executor.
    * In coarse-grained mode, the executor provides an RpcEnv that is already instantiated.
@@ -290,7 +294,7 @@ object SparkEnv extends Logging {
       }
     }
 
-    val broadcastManager = new BroadcastManager(isDriver, conf)
+    val broadcastManager = new BroadcastManager(isDriver, conf) // todo by guixian ???
 
     val mapOutputTracker = if (isDriver) {
       new MapOutputTrackerMaster(conf, broadcastManager, isLocal)
@@ -314,7 +318,7 @@ object SparkEnv extends Logging {
     val shuffleManager = Utils.instantiateSerializerOrShuffleManager[ShuffleManager](
       shuffleMgrClass, conf, isDriver)
 
-    val memoryManager: MemoryManager = UnifiedMemoryManager(conf, numUsableCores)
+    val memoryManager: MemoryManager = UnifiedMemoryManager(conf, numUsableCores) // todo by guixian ???
 
     val blockManagerPort = if (isDriver) {
       conf.get(DRIVER_BLOCK_MANAGER_PORT)
@@ -330,6 +334,7 @@ object SparkEnv extends Logging {
       None
     }
 
+    // 创建BlockManagerMaster
     // Mapping from block manager id to the block manager's information.
     val blockManagerInfo = new concurrent.TrieMap[BlockManagerId, BlockManagerInfo]()
     val blockManagerMaster = new BlockManagerMaster(
@@ -356,6 +361,7 @@ object SparkEnv extends Logging {
       new NettyBlockTransferService(conf, securityManager, bindAddress, advertiseAddress,
         blockManagerPort, numUsableCores, blockManagerMaster.driverEndpoint)
 
+    // 创建BlockManager
     // NB: blockManager is not valid until initialize() is called later.
     val blockManager = new BlockManager(
       executorId,

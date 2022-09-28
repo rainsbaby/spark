@@ -46,6 +46,7 @@ import org.apache.spark.network.TransportContext;
 import org.apache.spark.network.server.TransportChannelHandler;
 import org.apache.spark.network.util.*;
 
+// TransportClient的工厂类，可创建client。并维护与其他host的连接池，对同一个host返回同一个TransportClient
 /**
  * Factory for creating {@link TransportClient}s by using createClient.
  *
@@ -248,6 +249,7 @@ public class TransportClientFactory implements Closeable {
       throws IOException, InterruptedException {
     logger.debug("Creating new connection to {}", address);
 
+    // 初始化Bootstrap
     Bootstrap bootstrap = new Bootstrap();
     bootstrap.group(workerGroup)
       .channel(socketChannelClass)
@@ -278,6 +280,7 @@ public class TransportClientFactory implements Closeable {
     });
 
     // Connect to the remote server
+    // 与server建立连接
     long preConnect = System.nanoTime();
     ChannelFuture cf = bootstrap.connect(address);
     if (!cf.await(conf.connectionCreationTimeoutMs())) {

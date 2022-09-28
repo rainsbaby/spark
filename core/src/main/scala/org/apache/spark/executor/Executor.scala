@@ -52,6 +52,8 @@ import org.apache.spark.storage.{StorageLevel, TaskResultBlockId}
 import org.apache.spark.util._
 import org.apache.spark.util.io.ChunkedByteBuffer
 
+// 利用一个线程池执行task
+// 可被用于Mesos、Yarn、Kubernetes及standalone scheduler。内部有一个RPC接口用于与driver交互，Memos fine-grained模式下除外。
 /**
  * Spark executor, backed by a threadpool to run tasks.
  *
@@ -498,7 +500,7 @@ private[spark] class Executor(
         } else 0L
         var threwException = true
         val value = Utils.tryWithSafeFinally {
-          val res = task.run(
+          val res = task.run( // 执行task
             taskAttemptId = taskId,
             attemptNumber = taskDescription.attemptNumber,
             metricsSystem = env.metricsSystem,
@@ -624,14 +626,15 @@ private[spark] class Executor(
             ser.serialize(new IndirectTaskResult[Any](TaskResultBlockId(taskId), resultSize))
           } else if (resultSize > maxDirectResultSize) {
             val blockId = TaskResultBlockId(taskId)
+            // 通过BlockManager存储结果
             env.blockManager.putBytes(
               blockId,
               new ChunkedByteBuffer(serializedDirectResult.duplicate()),
-              StorageLevel.MEMORY_AND_DISK_SER)
-            logInfo(s"Finished $taskName. $resultSize bytes result sent via BlockManager)")
+              StorageLevel.MEMORY_AND_DISK_SER) // 结果序列化后存入内存，内存不足时存入磁盘
+            logInfo(s"Finished $taskId $taskName. $resultSize bytes result sent via BlockManager)")
             ser.serialize(new IndirectTaskResult[Any](blockId, resultSize))
           } else {
-            logInfo(s"Finished $taskName. $resultSize bytes result sent to driver")
+            logInfo(s"Finished $taskId $taskName. $resultSize bytes result sent to driver")
             serializedDirectResult
           }
         }
@@ -639,7 +642,7 @@ private[spark] class Executor(
         executorSource.SUCCEEDED_TASKS.inc(1L)
         setTaskFinishedAndClearInterruptStatus()
         plugins.foreach(_.onTaskSucceeded())
-        execBackend.statusUpdate(taskId, TaskState.FINISHED, serializedResult)
+        execBackend.statusUpdate(taskId, TaskState.FINISHED, serializedResult) // 通知driver端task执行完成
       } catch {
         case t: TaskKilledException =>
           logInfo(s"Executor killed $taskName, reason: ${t.reason}")
@@ -918,6 +921,7 @@ private[spark] class Executor(
     }
   }
 
+  // 下载缺失的依赖文件和jar包
   /**
    * Download any missing dependencies if we receive a new set of files and JARs from the
    * SparkContext. Also adds any new JARs we fetched to the class loader.

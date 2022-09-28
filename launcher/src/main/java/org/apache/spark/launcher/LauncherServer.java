@@ -38,6 +38,7 @@ import java.util.logging.Logger;
 
 import static org.apache.spark.launcher.LauncherProtocol.*;
 
+// 监听client端的连接
 /**
  * A server that listens locally for connections from client launched by the library. Each client
  * has a secret that it needs to send to the server to identify itself and establish the session.

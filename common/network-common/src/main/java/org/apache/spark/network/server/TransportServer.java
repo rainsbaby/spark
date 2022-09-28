@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.spark.network.TransportContext;
 import org.apache.spark.network.util.*;
 
+// RPC server端
 /**
  * Server for the efficient, low-level streaming service.
  */
@@ -48,6 +49,8 @@ public class TransportServer implements Closeable {
 
   private final TransportContext context;
   private final TransportConf conf;
+
+  // ？？？ by guixian
   private final RpcHandler appRpcHandler;
   private final List<TransportServerBootstrap> bootstraps;
 
@@ -97,6 +100,7 @@ public class TransportServer implements Closeable {
     return port;
   }
 
+  // 重要内容
   private void init(String hostToBind, int portToBind) {
 
     IOMode ioMode = IOMode.valueOf(conf.ioMode());

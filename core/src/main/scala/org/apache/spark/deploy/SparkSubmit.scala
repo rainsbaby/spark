@@ -952,7 +952,7 @@ private[spark] class SparkSubmit extends Logging {
     }
 
     try {
-      app.start(childArgs.toArray, sparkConf)
+      app.start(childArgs.toArray, sparkConf) // 启动不同类型的SparkApplication
     } catch {
       case t: Throwable =>
         throw findCause(t)

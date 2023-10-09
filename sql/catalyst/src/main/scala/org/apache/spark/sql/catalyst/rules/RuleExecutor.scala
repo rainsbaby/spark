@@ -168,7 +168,7 @@ abstract class RuleExecutor[TreeType <: TreeNode[_]] extends Logging {
         batch.name, plan, reOptimized)
     }
   }
-
+  // 执行rules，并跟踪每个rule的时间点
   /**
    * Executes the batches of rules defined by the subclass, and also tracks timing info for each
    * rule using the provided tracker.

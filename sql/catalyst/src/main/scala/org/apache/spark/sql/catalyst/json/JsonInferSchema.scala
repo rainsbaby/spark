@@ -45,6 +45,7 @@ private[sql] class JsonInferSchema(options: JSONOptions) extends Serializable {
     legacyFormat = FAST_DATE_FORMAT,
     isParsing = true)
 
+  // 推测json数据的类型：1.推测每条记录的类型 2.选择必要的最低类型，cover每个key 3.用string类型替代所有null类型field
   /**
    * Infer the type of a collection of json records in three stages:
    *   1. Infer the type of each record
@@ -90,7 +91,7 @@ private[sql] class JsonInferSchema(options: JSONOptions) extends Serializable {
         typeMerger(rootType, taskResult)
       }
     }
-    json.sparkContext.runJob(mergedTypesFromPartitions, foldPartition, mergeResult)
+    json.sparkContext.runJob(mergedTypesFromPartitions, foldPartition, mergeResult) // 获取json数据得到column名称和类型信息
 
     canonicalizeType(rootType, options)
       .find(_.isInstanceOf[StructType])

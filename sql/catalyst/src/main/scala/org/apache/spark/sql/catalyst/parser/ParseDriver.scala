@@ -73,6 +73,7 @@ abstract class AbstractSqlParser extends ParserInterface with SQLConfHelper with
     astBuilder.visitSingleTableSchema(parser.singleTableSchema())
   }
 
+  // 获取SQL的逻辑计划
   /** Creates LogicalPlan for a given SQL string. */
   override def parsePlan(sqlText: String): LogicalPlan = parse(sqlText) { parser =>
     astBuilder.visitSingleStatement(parser.singleStatement()) match {
@@ -83,6 +84,7 @@ abstract class AbstractSqlParser extends ParserInterface with SQLConfHelper with
     }
   }
 
+  // 将ParseTree转换为AST
   /** Get the builder (visitor) which converts a ParseTree into an AST. */
   protected def astBuilder: AstBuilder
 

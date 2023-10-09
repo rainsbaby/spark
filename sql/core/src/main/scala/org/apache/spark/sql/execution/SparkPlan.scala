@@ -473,7 +473,7 @@ abstract class SparkPlan extends QueryPlan[SparkPlan] with Logging with Serializ
         parts
       }
       val sc = sparkContext
-      val res = sc.runJob(childRDD, (it: Iterator[(Long, Array[Byte])]) =>
+      val res = sc.runJob(childRDD, (it: Iterator[(Long, Array[Byte])]) => // 执行job
         if (it.hasNext) it.next() else (0L, Array.emptyByteArray), partsToScan)
 
       var i = 0

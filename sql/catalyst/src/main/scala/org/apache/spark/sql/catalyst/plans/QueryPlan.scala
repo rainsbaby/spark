@@ -32,6 +32,12 @@ import org.apache.spark.sql.types.{DataType, StructType}
 import org.apache.spark.util.collection.BitSet
 
 /**
+ * spark sql 查询计划抽象类，可以是逻辑/物理计划。
+ * 注意：这个查询计划是相互循环的结构：QueryPlan -> Expression (subquery) -> QueryPlan，
+ * 从TreeNode继承的遍历API如transform、foreach、collect等，不遍历subqueries中的query plan
+ */
+
+/**
  * An abstraction of the Spark SQL query plan tree, which can be logical or physical. This class
  * defines some basic properties of a query plan node, as well as some new transform APIs to
  * transform the expressions of the plan node.

@@ -454,6 +454,7 @@ object QueryExecution {
     preparedPlan
   }
 
+  // 将逻辑计划转换为spark物理计划
   /**
    * Transform a [[LogicalPlan]] into a [[SparkPlan]].
    *

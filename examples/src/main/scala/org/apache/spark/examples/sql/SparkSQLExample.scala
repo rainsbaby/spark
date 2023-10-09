@@ -40,21 +40,47 @@ object SparkSQLExample {
       .builder()
       .appName("Spark SQL basic example")
       .config("spark.some.config.option", "some-value")
+      .master("local[2]")
       .getOrCreate()
 
     // $example off:init_session$
+    runTestExample(spark)
+//    runTestGroupExample(spark)
 
-    runBasicDataFrameExample(spark)
-    runDatasetCreationExample(spark)
-    runInferSchemaExample(spark)
-    runProgrammaticSchemaExample(spark)
+//    runBasicDataFrameExample(spark)
+//    runDatasetCreationExample(spark)
+//    runInferSchemaExample(spark)
+//    runProgrammaticSchemaExample(spark)
 
     spark.stop()
+  }
+
+  private def runTestGroupExample(spark: SparkSession): Unit = {
+    // $example on:create_df$
+    val df = spark.read.json("examples/src/main/resources/people1.json")
+
+    df.createOrReplaceTempView("people")
+    val sqlDF = spark.sql("SELECT name, count(*) FROM people group by name")
+    sqlDF.show()
+  }
+
+  private def runTestExample(spark: SparkSession): Unit = {
+    // $example on:create_df$
+    val df = spark.read.json("examples/src/main/resources/people.json")
+
+    df.createOrReplaceTempView("people")
+    val sqlDF = spark.sql("SELECT name,age FROM people order by age")
+    sqlDF.show()
   }
 
   private def runBasicDataFrameExample(spark: SparkSession): Unit = {
     // $example on:create_df$
     val df = spark.read.json("examples/src/main/resources/people.json")
+
+
+    df.createOrReplaceTempView("people")
+    val sqlDF = spark.sql("SELECT * FROM people")
+    sqlDF.show()
 
     // Displays the content of the DataFrame to stdout
     df.show()
@@ -119,8 +145,8 @@ object SparkSQLExample {
     // Register the DataFrame as a SQL temporary view
     df.createOrReplaceTempView("people")
 
-    val sqlDF = spark.sql("SELECT * FROM people")
-    sqlDF.show()
+//    val sqlDF = spark.sql("SELECT * FROM people")
+//    sqlDF.show()
     // +----+-------+
     // | age|   name|
     // +----+-------+

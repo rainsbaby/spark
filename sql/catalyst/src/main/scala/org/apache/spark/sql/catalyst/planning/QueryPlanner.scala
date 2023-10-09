@@ -38,6 +38,7 @@ abstract class GenericStrategy[PhysicalPlan <: TreeNode[PhysicalPlan]] extends L
   def apply(plan: LogicalPlan): Seq[PhysicalPlan]
 }
 
+// 将逻辑计划转换为物理计划的抽象类
 /**
  * Abstract class for transforming [[LogicalPlan]]s into physical plans.
  * Child classes are responsible for specifying a list of [[GenericStrategy]] objects that
@@ -53,12 +54,14 @@ abstract class GenericStrategy[PhysicalPlan <: TreeNode[PhysicalPlan]] extends L
  * @tparam PhysicalPlan The type of physical plan produced by this [[QueryPlanner]]
  */
 abstract class QueryPlanner[PhysicalPlan <: TreeNode[PhysicalPlan]] {
+  // 所有执行策略
   /** A list of execution strategies that can be used by the planner */
   def strategies: Seq[GenericStrategy[PhysicalPlan]]
 
   def plan(plan: LogicalPlan): Iterator[PhysicalPlan] = {
     // Obviously a lot to do here still...
 
+    // 所有可选的物理执行计划
     // Collect physical plan candidates.
     val candidates = strategies.iterator.flatMap(_(plan))
 
